@@ -1,0 +1,9 @@
+door_pv
+open the door
+open door 
+unlock door
+unlock the door
+unlock gate
+unlock the gate
+open gate
+open the gate

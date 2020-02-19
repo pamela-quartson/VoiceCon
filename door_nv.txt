@@ -1,0 +1,9 @@
+door_nv
+close the door
+lock the door
+lock door
+close door
+close gate 
+close the gate
+lock gate
+lock the gate
