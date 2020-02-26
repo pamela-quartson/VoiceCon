@@ -9,23 +9,12 @@ from keras.models import Sequential
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import shuffle
 import pickle
-
-embedder = None
-if not os.path.exists('voiceConData.pickle'):
-    print('Training data not found. Initializing embedder')
-    embedder = sister.MeanEmbedding(lang = 'en')
+import sys
+os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 
-'''label = ''
-train_labels = []
-path = os.getcwd()
-for root,dirs,files in os.walk(path):
-    for file in files:
-        if file.endswith('.txt'):
-            label = file.rstrip('.txt')
-            
-            train_labels.append(label)'''
-
+#================= Get data ============================
 door_nv = pd.read_csv('door_nv.txt')
 door_pv = pd.read_csv('door_pv.txt')
 garage_nv = pd.read_csv('garage_nv.txt')
@@ -36,8 +25,9 @@ water_nv = pd.read_csv('water_nv.txt')
 water_pv = pd.read_csv('water_pv.txt')
 
 data_ = [door_nv,door_pv,garage_nv,garage_pv,lights_nv,lights_pv,water_nv,water_pv]
-
+#================= PREPROCESS===================================
 def make_labels(data):
+    print('Making labels ...')
     label_list = []
     label = data.columns.values[0]
     for i in range(len(data)):
@@ -45,17 +35,19 @@ def make_labels(data):
     return pd.DataFrame(label_list)
 
 def preprocess_1(data_to_process):
+    print('\n Preprocessing data')
     column_label = data_to_process.columns.values[0]
     df = pd.DataFrame(map(embedder,data_to_process[column_label]))
     return df
 
 def merger(data):
+    print('\n Merging data')
     df = preprocess_1(data)
     label = make_labels(data)
     final_df = pd.concat([df,label],axis = 1)
     return final_df
 
-def save_dat():
+def INIT():
     all_data = pd.DataFrame({}) #init dataframe
     for i in data_:
         d = merger(i)
@@ -67,52 +59,81 @@ def save_dat():
         D.close()
 
     with open('voiceConData.pickle','wb') as D:
+        print('\nWriting Data to directory')
         pickle.dump(all_data,D)
     
-
+#=================================================================================================
 def get_data():
      with open('voiceConData.pickle','rb') as D:
+         print('\nGetting data from directory')
          data  = pickle.load(D)
          return data
 
 def encode_labels(labels):
-     #encode labels
+    #encode labels
+    print('Encoding training labels')
+    print(labels)
     encoder = LabelEncoder()
     encoder.fit(train_labels)
     labels = encoder.fit_transform(train_labels)
     LABELS = np_utils.to_categorical(labels)
-    return LABELS
+    print(LABELS)
+    return LABELS #encoded labels
 
+
+      
 
 
 if __name__ == '__main__':
+
+    embedder = None
+    if not os.path.exists('voiceConData.pickle'):
+        #get data, preprocess and train
+        print('Training data not found. Initializing embedder')
+        embedder = sister.MeanEmbedding(lang = 'en')
+        INIT()
+
     sample = get_data()
+    print(sample,sample.shape)
     #reset columns and indices
-    sample.columns = list(range(0,301))
+    sample.columns = list(range(0,sample.shape[1]))
     sample.index = list(range(0,sample.shape[0]))
 
     train_labels = sample[300]
     sc = MinMaxScaler()
     
-
-    train_samples = sample[[0,299]]
+    #===========Normalize features=======================
+    train_samples = sample[list(range(0,sample.shape[1]-1))]
     train_data = sc.fit_transform(train_samples)
     encodedLabels = encode_labels(train_labels)
+    print(train_data,train_data.shape)
     #print(encodedLabels,encodedLabels.shape)
+    if not os.path.exists('voiceCon_NET.hdf5'):#if there is no trained model in dir 
+        print('NO trained model found for this data, Initializing training on data: VoiceCon')
+        NET = Sequential()
+        NET.add(Dense(units = train_data.shape[1],input_dim = train_data.shape[1],activation = 'relu'))
+        NET.add(Dense(units = 512,activation = 'relu'))
+        NET.add(Dense(units = 1024,activation = 'relu'))
+        NET.add(Dense(units = 512,activation = 'relu'))
+        NET.add(Dense(units = 256,activation = 'relu'))
+        NET.add(Dense(units = 64,activation = 'relu'))
+        NET.add(Dense(units = encodedLabels.shape[1],activation = 'softmax'))
+                
+        NET.summary()
+        NET.compile(optimizer = 'adam',loss = 'categorical_crossentropy',metrics = ['accuracy'])
+        NET.fit(x = train_data,y = encodedLabels,validation_split= 0.1,epochs = 1000,steps_per_epoch=10,validation_steps=1)
+        NET.save('voiceCon_NET.hdf5')
+   
+    from keras.models import load_model
+    trained_model = load_model('voiceCon_NET.hdf5')
+    print('Initializing embedder') 
+    embedder = sister.MeanEmbedding(lang = 'en')
+    ar = embedder('close the door')
+    ar = ar.reshape(1,-1) #reshaping for a single sample
+    ar = sc.fit_transform(ar)
+    print(trained_model.predict_classes(ar))
     
-    NET = Sequential()
-    NET.add(Dense(units = train_data.shape[1],input_dim = train_data.shape[1],activation = 'relu'))
-    NET.add(Dense(units = 512,activation = 'relu'))
-    NET.add(Dense(units = 1024,activation = 'relu'))
-    NET.add(Dense(units = 512,activation = 'relu'))
-    NET.add(Dense(units = 256,activation = 'relu'))
-    NET.add(Dense(units = 64,activation = 'relu'))
-    NET.add(Dense(units = encodedLabels.shape[1],activation = 'relu'))
-             
-    NET.summary()
-    NET.compile(optimizer = 'adam',loss = 'categorical_crossentropy',metrics = ['accuracy'])
-    NET.fit(x = train_data,y = encodedLabels,validation_split= 0,epochs = 1000)
-
+    
 
 
 

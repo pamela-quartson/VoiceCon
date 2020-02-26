@@ -2,8 +2,11 @@ lights_nv
 turn off lights
 turn the lights off
 lights off
-light the room
+light out
 turn off the lights 
-dim the lights
+dimm the lights
 please turn off the lights
 get the lights
+please turn the lights off
+off the lights
+switch off the lights 
