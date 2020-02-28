@@ -72,12 +72,12 @@ def get_data():
 def encode_labels(labels):
     #encode labels
     print('Encoding training labels')
-    print(labels)
+    #for i in labels:print(i)
     encoder = LabelEncoder()
     encoder.fit(train_labels)
     labels = encoder.fit_transform(train_labels)
     LABELS = np_utils.to_categorical(labels)
-    print(LABELS)
+    #for i in LABELS:print(i)
     return LABELS #encoded labels
 
 
@@ -94,7 +94,7 @@ if __name__ == '__main__':
         INIT()
 
     sample = get_data()
-    print(sample,sample.shape)
+    #print(sample,sample.shape)
     #reset columns and indices
     sample.columns = list(range(0,sample.shape[1]))
     sample.index = list(range(0,sample.shape[0]))
@@ -106,7 +106,9 @@ if __name__ == '__main__':
     train_samples = sample[list(range(0,sample.shape[1]-1))]
     train_data = sc.fit_transform(train_samples)
     encodedLabels = encode_labels(train_labels)
-    print(train_data,train_data.shape)
+    for (a,b) in zip(sample[300],encodedLabels):print(a,b)
+    predictor = dict(zip(sample[300],encodedLabels))
+    #print(predictor)
     #print(encodedLabels,encodedLabels.shape)
     if not os.path.exists('voiceCon_NET.hdf5'):#if there is no trained model in dir 
         print('NO trained model found for this data, Initializing training on data: VoiceCon')
@@ -124,14 +126,20 @@ if __name__ == '__main__':
         NET.fit(x = train_data,y = encodedLabels,validation_split= 0.1,epochs = 1000,steps_per_epoch=10,validation_steps=1)
         NET.save('voiceCon_NET.hdf5')
    
+    #=========== load model and predict ============================
     from keras.models import load_model
     trained_model = load_model('voiceCon_NET.hdf5')
     print('Initializing embedder') 
     embedder = sister.MeanEmbedding(lang = 'en')
-    ar = embedder('close the door')
+    ar = embedder('open the door')
     ar = ar.reshape(1,-1) #reshaping for a single sample
-    ar = sc.fit_transform(ar)
-    print(trained_model.predict_classes(ar))
+    ar = sc.fit_transform(ar)  
+    prediction = trained_model.predict_classes(ar)
+    for predicted_label,its_array in predictor.items():
+        if its_array[prediction] == 1:
+            print('This is it:::::::::::',predicted_label)
+            break
+   
     
     
 
