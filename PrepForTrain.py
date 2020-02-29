@@ -38,6 +38,7 @@ class Prep:
                     print('found new categroy:',category)
                     self.CATEGORIES.append(category)
                     print('Adding new categroy')
+        
         if len(new_cats) == 0:print('No new categories found')
         else:
             self.retrain = True
@@ -53,8 +54,9 @@ class Prep:
         #now load data and prepcess
         self.data = {}
         for category in self.CATEGORIES:
+            print(category)
             label = category.strip('.txt')
-            self.data[label] = pd.read_csv(category)
+            self.data[label] = pd.read_csv(self.data_categories+'/'+category)
         #print(self.data)
         
         if not os.path.exists(self.prepared_data):
