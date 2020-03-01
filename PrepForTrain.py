@@ -145,10 +145,22 @@ class Prep:
         train_samples = sample[list(range(0,sample.shape[1]-1))]
         train_data = sc.fit_transform(train_samples)
         encodedLabels = self.encode_labels(train_labels)
+        p = self.make_label_matches(encodedLabels,train_labels)
+        print(p)
         
         return train_data,encodedLabels
-     
+    
+    def make_label_matches(self,encoded,default):
+        match = []
+        for en in encoded:
+            match.append(en.argmax())#append the index of the prediction encoded label
+        labels = list(default)
+        prediction_matches = dict(zip(match,labels))
+        with open('prediction_matches.pickle','wb') as M:
+            pickle.dump(prediction_matches,M)
+
+        return prediction_matches
 
 
-Prep()
+#Prep()
 
