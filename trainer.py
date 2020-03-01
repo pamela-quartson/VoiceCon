@@ -26,7 +26,7 @@ class Trainer:
                 
         NET.summary()
         NET.compile(optimizer = 'adam',loss = 'categorical_crossentropy',metrics = ['accuracy'])
-        NET.fit(x = train_data,y = encodedLabels,validation_split= 0.1,epochs = 1000,steps_per_epoch=10,validation_steps=1)
+        NET.fit(x = train_data,y = encodedLabels,validation_split= 0.1,epochs = 100,steps_per_epoch=10,validation_steps=1)
         print('Saving Trained Model')
         NET.save('voiceCon_NET.hdf5')
    

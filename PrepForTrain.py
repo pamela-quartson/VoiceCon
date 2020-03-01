@@ -15,65 +15,69 @@ class Prep:
         self.data_categories = 'category' #categorized data path used for training
         self.prepared_data = 'voiceConData.pickle'
         self.retrain = False
+        self.trained_model = 'voiceCon_NET.hdf5'
         
-        if not os.path.exists(self.CATEGORY_FILE):
-            print('There are no existing categories of commands\n\
-            Creating Category file')
-            with open(self.CATEGORY_FILE,'wb') as Cfile:
-                pickle.dump([],Cfile) # initialize with empty dictionary
-            print('New Categroy file created')
-        #after new file is created, check categroy dir and load
-        
-        print('Checking for new categories...')
-        with open(self.CATEGORY_FILE,'rb') as Cfile:
-            self.CATEGORIES = pickle.load(Cfile)
-            
-        
-        new_cats = []
-        for roots,files,dirs in os.walk(self.data_categories):
-            print('Current Categories found: ',dirs)
-            for category in dirs:
-                if category not in self.CATEGORIES:
-                    new_cats.append(category)
-                    print('found new categroy:',category)
-                    self.CATEGORIES.append(category)
-                    print('Adding new categroy')
-        
-        if len(new_cats) == 0:print('No new categories found')
-        else:
+        if not os.path.exists(self.trained_model):
+            print('No existing trained model found. PReparing to train new model')
             self.retrain = True
-            print('Remebering new Categories:...',new_cats)
-       
-        with open(self.CATEGORY_FILE,'wb') as Cfile:
-            pickle.dump(self.CATEGORIES,Cfile)
-        print('Current categories in memory:',self.CATEGORIES)
-        
-        #NB for now no ability to delete categories
-        #i think i will leave it like this for a while
-
-        #now load data and prepcess
-        self.data = {}
-        for category in self.CATEGORIES:
-            print(category)
-            label = category.strip('.txt')
-            self.data[label] = pd.read_csv(self.data_categories+'/'+category)
-        #print(self.data)
-        
-        if not os.path.exists(self.prepared_data):
-            print('No prepared data for training found')
-            print('Initializing Embedder...')
-            self.embedder = sister.MeanEmbedding(lang = 'en')
-            self.INIT()
-        
-        if self.retrain:
-            print('Since new categories were added, Retraining model...')
-            print('Loading Prepared Data')
+            if not os.path.exists(self.CATEGORY_FILE):
+                print('There are no existing categories of commands\n\
+                Creating Category file')
+                with open(self.CATEGORY_FILE,'wb') as Cfile:
+                    pickle.dump([],Cfile) # initialize with empty dictionary
+                print('New Categroy file created')
+            #after new file is created, check categroy dir and load
             
-            output = self.normalize()
-            trainingData = output[0]
-            labels = output[1]
-            trainer.Trainer(trainingData,labels)
-      
+            print('Checking for new categories...')
+            with open(self.CATEGORY_FILE,'rb') as Cfile:
+                self.CATEGORIES = pickle.load(Cfile)
+                
+            
+            new_cats = []
+            for roots,files,dirs in os.walk(self.data_categories):
+                print('Current Categories found: ',dirs)
+                for category in dirs:
+                    if category not in self.CATEGORIES:
+                        new_cats.append(category)
+                        print('found new categroy:',category)
+                        self.CATEGORIES.append(category)
+                        print('Adding new categroy')
+            
+            if len(new_cats) == 0:print('No new categories found')
+            else:
+                self.retrain = True
+                print('Remebering new Categories:...',new_cats)
+        
+            with open(self.CATEGORY_FILE,'wb') as Cfile:
+                pickle.dump(self.CATEGORIES,Cfile)
+            print('Current categories in memory:',self.CATEGORIES)
+            
+            #NB for now no ability to delete categories
+            #i think i will leave it like this for a while
+
+            #now load data and prepcess
+            self.data = {}
+            for category in self.CATEGORIES:
+                print(category)
+                label = category.strip('.txt')
+                self.data[label] = pd.read_csv(self.data_categories+'/'+category)
+            #print(self.data)
+            
+            if not os.path.exists(self.prepared_data):
+                print('No prepared data for training found')
+                print('Initializing Embedder...')
+                self.embedder = sister.MeanEmbedding(lang = 'en')
+                self.INIT()
+            
+            if self.retrain:
+                print('Since new categories were added, Retraining model...')
+                print('Loading Prepared Data')
+                
+                output = self.normalize()
+                trainingData = output[0]
+                labels = output[1]
+                trainer.Trainer(trainingData,labels)
+        
 
 
 
