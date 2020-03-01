@@ -18,13 +18,13 @@ class Prep:
         self.trained_model = 'voiceCon_NET.hdf5'
         
         if not os.path.exists(self.trained_model):
-            print('No existing trained model found. PReparing to train new model')
+            print('No existing trained model found. Preparing to train new model')
             self.retrain = True
             if not os.path.exists(self.CATEGORY_FILE):
                 print('There are no existing categories of commands\n\
                 Creating Category file')
                 with open(self.CATEGORY_FILE,'wb') as Cfile:
-                    pickle.dump([],Cfile) # initialize with empty dictionary
+                    pickle.dump([],Cfile) # initialize with empty list
                 print('New Categroy file created')
             #after new file is created, check categroy dir and load
             
@@ -58,7 +58,7 @@ class Prep:
             #now load data and prepcess
             self.data = {}
             for category in self.CATEGORIES:
-                print(category)
+                #print(category)
                 label = category.strip('.txt')
                 self.data[label] = pd.read_csv(self.data_categories+'/'+category)
             #print(self.data)
@@ -70,7 +70,7 @@ class Prep:
                 self.INIT()
             
             if self.retrain:
-                print('Since new categories were added, Retraining model...')
+                print('Since new categories were added or new model required, Retraining model...')
                 print('Loading Prepared Data')
                 
                 output = self.normalize()

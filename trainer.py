@@ -2,8 +2,6 @@ from keras.models import Sequential
 from keras.layers.core import Dense
 import os
 import sys
-os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 
 class Trainer:
