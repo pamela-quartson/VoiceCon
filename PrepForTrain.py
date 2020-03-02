@@ -76,7 +76,7 @@ class Prep:
                 output = self.normalize()
                 trainingData = output[0]
                 labels = output[1]
-                trainer.Trainer(trainingData,labels)
+                trainer.Trainer(trainingData,labels,see_history=True)
         
 
 

@@ -29,20 +29,11 @@ class Predictor:
     
     def tell(self,to_predict):
         embedded = self.embedder(to_predict)
-        embedded = embedded.reshape(-1,1) # reshape for svcaling
-        print(embedded,embedded.shape) 
+        embedded = embedded.reshape(-1,1) # reshape for scaling
         sc = MinMaxScaler()
         embedded = sc.fit_transform(embedded)
-        embedded = embedded.reshape(1,-1)
-        print(embedded,embedded.shape)
-        print(self.NET.predict(embedded))
+        embedded = embedded.reshape(1,-1) #reshape for one sample and prediction
         prob,p_class = self.NET.predict(embedded),self.NET.predict_classes(embedded)
-        print(prob,self.matcher[p_class[0]],to_predict)
+        return prob,self.matcher[p_class[0]],self.NET.predict_classes(embedded)
 
 
-'''P = Predictor()
-P.tell('lock the door')
-P.tell('close the door')
-P.tell('open the door')
-P.tell('open the tap')
-P.tell('fetch the water')'''
